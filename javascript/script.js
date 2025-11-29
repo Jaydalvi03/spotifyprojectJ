@@ -12,7 +12,7 @@ let currFolder;
 async function getsongs(folder) {
     currFolder = folder;
 
-    // FETCH the info.json instead of the folder
+    // FETCH the info.json inside the folder
     const res = await fetch(`${folder}/info.json`);
     const data = await res.json();
     const songs = data.songs || [];
@@ -72,13 +72,14 @@ function playMusic(track, autoplay = true) {
 // Main Init
 // -----------------------------
 async function displayalbums() {
-    const res = await fetch(`${BASE}/songs/info.json`);   // FETCH the main songs list
+    // FETCH only the root songs info.json
+    const res = await fetch(`${BASE}/songs/info.json`);
     const data = await res.json();
     const folders = data.folders || [];
 
     let cardcontainer = document.querySelector(".cardcontainer");
 
-    folders.forEach(async folder => {
+    for (let folder of folders) {
         try {
             const res2 = await fetch(`${BASE}/songs/${folder}/info.json`);
             const albumData = await res2.json();
@@ -105,7 +106,7 @@ async function displayalbums() {
         } catch (err) {
             console.warn("Failed to load info for", folder, err);
         }
-    });
+    }
 
     Array.from(document.querySelectorAll(".card")).forEach(card => {
         card.addEventListener("click", async () => {
@@ -201,7 +202,7 @@ async function displayalbums() {
 
 //MAIN
 async function main() {
-    // Replace 'folder' with an actual folder name that exists
+    // Replace 'gunna' with your actual first album folder
     await getsongs(`${BASE}/songs/gunna`);
 
     if (songsList.length) {
@@ -229,3 +230,4 @@ async function main() {
 }
 
 document.addEventListener("DOMContentLoaded", main);
+

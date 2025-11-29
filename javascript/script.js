@@ -1,4 +1,4 @@
-console.log("hello")
+console.log("hello");
 
 const BASE = "/spotifyprojectJ";  // <<<<<< ADDED FOR GITHUB PAGES
 
@@ -12,20 +12,10 @@ let currFolder;
 async function getsongs(folder) {
     currFolder = folder;
 
-    const res = await fetch(`${folder}/`);  // stays same because folder already includes BASE
-    const html = await res.text();
-
-    const div = document.createElement("div");
-    div.innerHTML = html;
-
-    const anchors = div.getElementsByTagName("a");
-    const songs = [];
-
-    for (let a of anchors) {
-        if (a.href.endsWith(".mp3")) {
-            songs.push(a.href.split(`/${folder}/`)[1]);
-        }
-    }
+    // FETCH the info.json instead of the folder
+    const res = await fetch(`${folder}/info.json`);
+    const data = await res.json();
+    const songs = data.songs || [];
 
     songsList = songs;
 
@@ -37,8 +27,7 @@ async function getsongs(folder) {
             const display = decodeURI(song);
             ul.insertAdjacentHTML(
                 "beforeend",
-                `
-                <li data-track="${song}">
+                `<li data-track="${song}">
                     <img src="images/music.svg" class="invert" height="24">
                     <div class="info">
                         <div>${display}</div>
@@ -48,8 +37,7 @@ async function getsongs(folder) {
                         <span>Play Now</span>
                         <img src="images/play.svg" class="invert" height="24">
                     </div>
-                </li>
-                `
+                </li>`
             );
         });
 
@@ -84,38 +72,20 @@ function playMusic(track, autoplay = true) {
 // Main Init
 // -----------------------------
 async function displayalbums() {
-    const res = await fetch(`${BASE}/songs`);   // <<<< UPDATED
-    const html = await res.text();
-
-    let div = document.createElement("div");
-    div.innerHTML = html;
-    let anchors = div.getElementsByTagName("a");
-    console.log(anchors);
+    const res = await fetch(`${BASE}/songs/info.json`);   // FETCH the main songs list
+    const data = await res.json();
+    const folders = data.folders || [];
 
     let cardcontainer = document.querySelector(".cardcontainer");
-    console.log("cardcontainer=", cardcontainer);
 
-    let array = Array.from(anchors);
-    console.log("total links", cardcontainer);
-
-    array.forEach(async e => {
-        console.log("found links", e.href);
-
-        let folder = e.href.split("/").filter(Boolean).pop();
-        if (!folder || folder.includes(".")) return;
-
-        console.log("folder detected", folder);
-
+    folders.forEach(async folder => {
         try {
-            console.log("try block run?", folder);
-
-            const res2 = await fetch(`${BASE}/songs/${folder}/info.json`);  // <<<< UPDATED
-            const data = await res2.json();
-            console.log("data", data);
+            const res2 = await fetch(`${BASE}/songs/${folder}/info.json`);
+            const albumData = await res2.json();
 
             if (cardcontainer) {
-                cardcontainer.innerHTML = cardcontainer.innerHTML + `
-                <div class="card border" data-folder="${folder}">
+                cardcontainer.innerHTML += 
+                `<div class="card border" data-folder="${folder}">
                     <div class="album-wrapper">
                         <img src="${BASE}/songs/${folder}/cover.jpg" class="albumcover">
                         <div class="play-overlay">
@@ -126,8 +96,8 @@ async function displayalbums() {
                         </div>
                     </div>
                     <div class="card-info">
-                        <h2 class="title">${data.title}</h2>
-                        <p class="artist">${data.description}</p>
+                        <h2 class="title">${albumData.title}</h2>
+                        <p class="artist">${albumData.description}</p>
                     </div>
                 </div>`;
             }
@@ -140,12 +110,12 @@ async function displayalbums() {
     Array.from(document.querySelectorAll(".card")).forEach(card => {
         card.addEventListener("click", async () => {
             let folder = card.dataset.folder;
-            console.log("Opening:", `${folder}`);
+            console.log("Opening:", folder);
 
             currentsong.pause();
             currentsong.currentTime = 0;
 
-            songsList = await getsongs(`${BASE}/songs/${folder}`);  // <<<< UPDATED
+            songsList = await getsongs(`${BASE}/songs/${folder}`);
 
             if (songsList.length) {
                 playMusic(songsList[0], true);
@@ -200,12 +170,10 @@ async function displayalbums() {
     }
 
     document.querySelector(".volume>img")?.addEventListener("click", (e) => {
-        console.log("mute clicked");
         if (currentsong.muted) {
             currentsong.muted = false;
             e.currentTarget.src = "images/volume.svg";
             document.querySelector(".volume-slider").value = currentsong.volume * 110;
-
         } else {
             currentsong.muted = true;
             e.currentTarget.src = "images/mute.svg";
@@ -233,7 +201,8 @@ async function displayalbums() {
 
 //MAIN
 async function main() {
-    await getsongs(`${BASE}/songs/folder`);   // <<<< UPDATED
+    // Replace 'folder' with an actual folder name that exists
+    await getsongs(`${BASE}/songs/gunna`);
 
     if (songsList.length) {
         playMusic(songsList[0], false);

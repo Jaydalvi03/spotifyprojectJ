@@ -9,7 +9,7 @@ let currFolder;
 async function getsongs(folder) {
     currFolder = folder;
 
-    const res = await fetch(`${folder}/`);
+    const res = await fetch(`./songs/${folder}/`);
     const html = await res.text();
 
     const div = document.createElement("div");
@@ -86,7 +86,7 @@ function playMusic(track, autoplay = true) {
 // -----------------------------
 async function displayalbums() {
     // fetch root listing (adjust if you want a different path)
-    const res = await fetch(`/songs`);
+    const res = await fetch(`./songs`);
     const html = await res.text();
     // console.log(Response);
 
@@ -133,14 +133,14 @@ console.log("skiiped",e.href);
             // meta data fetch
             try {
                 console.log("try block ruunun?",folder)
-                const res2 = await fetch(`songs/${folder}/info.json`);
+                const res2 = await fetch(`./songs/${folder}/info.json`);
                 const data = await res2.json();
 console.log("data",data);
                 console.log(res2);
                 if (cardcontainer) {
                     cardcontainer.innerHTML = cardcontainer.innerHTML + ` <div class="card border" data-folder="${folder}">
             <div class="album-wrapper">
-              <img src="/songs/${folder}/cover.jpg" class="albumcover">
+              <img src="./songs/${folder}/cover.jpg" class="albumcover">
               <div class="play-overlay">
                 <svg viewBox="0 0 48 48" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="24" cy="24" r="24" fill="#1ED760" />
@@ -285,7 +285,7 @@ currentsong.addEventListener("ended", () => {
 
 //main
 async function main() {
-    await getsongs("songs/folder");
+    await getsongs("folder");
 
     if (songsList.length) {
         playMusic(songsList[0], false);
